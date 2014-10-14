@@ -7,6 +7,7 @@ from hashlib import sha1
 import base64
 import datetime
 import calendar
+import time
 
 
 class OmnitureWrapper:
@@ -28,7 +29,11 @@ class OmnitureWrapper:
         return 'UsernameToken Username="%s", PasswordDigest="%s", Nonce="%s", Created="%s"' % (
             self._user_name, password_64.strip(), base64nonce.strip(), created_on)
 
-    def send_request(self, method, request_data):
+    def __get_request_data(self, request):
+        request.add_header('X-WSSE', self.__create_header())
+        return json.loads(urllib2.urlopen(request).read(), encoding='utf-8')
+
+    def send_request(self, method, request_data, retry_delay=10):
         """
         Sends request to the endpoint
         :param method: String of method
@@ -37,15 +42,20 @@ class OmnitureWrapper:
         """
         request = urllib2.Request('https://api.omniture.com/admin/1.4/rest/?method=%s' % method,
                                   json.dumps(request_data))
-        request.add_header('X-WSSE', self.__create_header())
-        return json.loads(urllib2.urlopen(request).read(), encoding='utf-8')
+        try:
+            return self.__get_request_data(request)
+        except urllib2.HTTPError as e:
+            print '{0}. Retrying in {1} seconds...'.format(e, retry_delay)
+            time.sleep(retry_delay)
+            return self.__get_request_data(request)
 
-    def retrieve_report(self, request):
+    def retrieve_report(self, request, delay=5):
         """
         Queues and retrieves the report
         :param request: json object of request body
         :return: Report data
         """
         response = self.send_request(method='Report.Queue', request_data=request)
+        time.sleep(delay)
         report = self.send_request(method='Report.Get', request_data={'reportID': response['reportID']})
         return report
