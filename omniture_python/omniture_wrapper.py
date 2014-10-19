@@ -1,5 +1,3 @@
-__author__ = 'DeStars'
-
 import binascii
 import urllib2
 import json
@@ -8,6 +6,8 @@ import base64
 import datetime
 import calendar
 import time
+
+__author__ = 'DeStars'
 
 
 class OmnitureWrapper:
@@ -33,7 +33,7 @@ class OmnitureWrapper:
         request.add_header('X-WSSE', self.__create_header())
         return json.loads(urllib2.urlopen(request).read(), encoding='utf-8')
 
-    def send_request(self, method, request_data, retry_delay=10):
+    def send_request(self, method, request_data, retry_delay=15):
         """
         Sends request to the endpoint
         :param method: String of method
@@ -47,7 +47,7 @@ class OmnitureWrapper:
         except urllib2.HTTPError as e:
             print '{0}. Retrying in {1} seconds...'.format(e, retry_delay)
             time.sleep(retry_delay)
-            return self.__get_request_data(request)
+            return self.send_request(method, request_data)
 
     def retrieve_report(self, request, delay=5):
         """

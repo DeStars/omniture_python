@@ -1,6 +1,6 @@
-__author__ = 'DeStars'
-
 from datetime import datetime
+
+__author__ = 'DeStars'
 
 
 class ReportBuilder:
@@ -12,10 +12,12 @@ class ReportBuilder:
         return ("_suite_id", "_start_date", "_end_date",
                 "_date_granularity", "_metrics_id", "_elements")
 
-    def _convert_to_int(self, int_str):
+    @staticmethod
+    def _convert_to_int(int_str):
         return int(int_str)
 
-    def _convert_to_date(self, date_str):
+    @staticmethod
+    def _convert_to_date(date_str):
         return datetime.strptime(date_str, '%Y-%m-%d').strftime("%Y-%m-%d")
 
     def _copy(self):
@@ -53,7 +55,7 @@ class ReportBuilder:
         obj = self._copy()
         if "_metrics_id" not in obj.data:
             obj.data["_metrics_id"] = []
-        obj.data["_metrics_id"] = metrics_id
+        obj.data["_metrics_id"].extend(metrics_id)
         return obj
 
     def add_elements(self, element_id, num_values):
@@ -66,7 +68,7 @@ class ReportBuilder:
     def get_report_definition(self):
         # check all required elements are available
         # return object
-        metrics = [{"id": mid} for mid in [self.data["_metrics_id"]]]
+        metrics = [{"id": mid} for mid in self.data["_metrics_id"]]
         elements = [{"id": eid, "top": top} for eid, top in self.data["_elements"]]
         return {
             "reportDescription":{
